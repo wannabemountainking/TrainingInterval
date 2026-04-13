@@ -9,6 +9,6 @@ import Foundation
 
 
 enum ExerciseMode {
-    case trainingMode
-    case relaxMode
+    case trainingMode(totalTime: Int)
+    case relaxMode(totalTime: Int)
 }
