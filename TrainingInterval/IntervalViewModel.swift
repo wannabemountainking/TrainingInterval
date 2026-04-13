@@ -14,32 +14,59 @@ final class IntervalViewModel {
     
     // MARK: - Properties: publisher, connection, cancellables, 현재 시간, 남은 시간, phase, progress
     let timerPublisher = Timer.publish(every: 1.0, on: .main, in: .common)
-    let cancellables = Set<AnyCancellable>()
+    var cancellables: Set<AnyCancellable>
     var connection: Cancellable?
     
     var currentSecond: Int
     var phase: ExerciseMode
     var timeLeft: Int {
-        switch phase {
-        case .trainingMode(let totalTime), .relaxMode(let totalTime):
-            return totalTime - currentSecond
-        }
+        self.phase.totalTime - self.currentSecond
     }
     var progressBar: Int {
-        switch phase {
-        case .trainingMode(let totalTime), .relaxMode(let totalTime):
-            return currentSecond / totalTime
-        }
+        Int(self.currentSecond * 10 / self.phase.totalTime)
     }
     
-    init(connection: Cancellable? = nil, currentSecond: Int, phase: ExerciseMode) {
+    init(cancellables: Set<AnyCancellable> = Set<AnyCancellable>(), connection: Cancellable? = nil, currentSecond: Int = 0, phase: ExerciseMode = .trainingMode) {
+        self.cancellables = cancellables
         self.connection = connection
         self.currentSecond = currentSecond
         self.phase = phase
     }
     
-    func runTimer() {
-
+    func start() {
+        timerPublisher
+            .scan(0) { prev, _ in
+                prev + 1
+            }
+            .sink { [weak self] seconds in
+                guard let self else {return}
+                self.currentSecond += 1
+                if self.currentSecond > self.phase.totalTime {
+                    self.phase = (self.phase == .trainingMode) ? .relaxMode : .trainingMode
+                    self.currentSecond = 0
+                }
+            }
+            .store(in: &cancellables)
+        connection = timerPublisher.connect()
     }
+    
+    func stop() {
+        connection?.cancel()
+        connection = nil
+        
+    }
+    
+    func resume() {
+        connection = timerPublisher.connect()
+    }
+    
+    func reset() {
+        stop()
+        cancellables.removeAll()
+        self.currentSecond = 0
+        self.phase = .trainingMode
+    }
+    
 }
+
 

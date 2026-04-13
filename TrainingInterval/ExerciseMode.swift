@@ -9,6 +9,13 @@ import Foundation
 
 
 enum ExerciseMode {
-    case trainingMode(totalTime: Int)
-    case relaxMode(totalTime: Int)
+    case trainingMode
+    case relaxMode
+    
+    var totalTime: Int {
+        switch self {
+        case .trainingMode: return 30
+        case .relaxMode: return 10
+        }
+    }
 }
