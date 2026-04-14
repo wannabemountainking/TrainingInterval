@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     
-    @State private var vm: IntervalViewModel = .init()
+    @StateObject private var vm: IntervalViewModel = .init()
     
     var body: some View {
         VStack(spacing: 40) {
